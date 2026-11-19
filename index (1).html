@@ -1,0 +1,1092 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brain Challenge - Quiz Game</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #0c1020;
+    --panel: #171e33;
+    --panel2: #202943;
+    --purple: #8265ff;
+    --cyan: #36d9ff;
+    --white: #fff;
+    --muted: #a5aec4;
+    --green: #24d69a;
+    --red: #ff5c77;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background:
+        radial-gradient(circle at top left, #252052, transparent 40%),
+        var(--bg);
+    color: var(--white);
+    min-height: 100vh;
+}
+
+button, select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.container {
+    width: 92%;
+    max-width: 1050px;
+    margin: auto;
+}
+
+header {
+    padding: 20px 0;
+    border-bottom: 1px solid #ffffff15;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: 900;
+}
+
+.logo span {
+    color: var(--cyan);
+}
+
+.sound-btn {
+    background: var(--panel);
+    color: white;
+    border: 1px solid #ffffff25;
+    padding: 10px 15px;
+    border-radius: 10px;
+}
+
+.screen {
+    display: none;
+    padding: 45px 0;
+}
+
+.screen.active {
+    display: block;
+}
+
+.hero {
+    text-align: center;
+    padding: 35px 0;
+}
+
+.hero-icon {
+    font-size: 65px;
+    margin-bottom: 15px;
+}
+
+.hero h1 {
+    font-size: clamp(34px, 6vw, 55px);
+    margin-bottom: 12px;
+}
+
+.hero h1 span {
+    color: var(--cyan);
+}
+
+.hero p {
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+.section-title {
+    font-size: 20px;
+    margin: 25px 0 15px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.category, .difficulty {
+    background: var(--panel);
+    border: 1px solid #ffffff15;
+    padding: 22px 10px;
+    text-align: center;
+    border-radius: 14px;
+    color: white;
+    transition: .2s;
+}
+
+.category:hover, .difficulty:hover,
+.category.selected, .difficulty.selected {
+    border-color: var(--purple);
+    background: #28264d;
+    transform: translateY(-3px);
+}
+
+.category .emoji {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 9px;
+}
+
+.category small, .difficulty small {
+    display: block;
+    color: var(--muted);
+    margin-top: 6px;
+}
+
+.difficulty {
+    padding: 17px 8px;
+}
+
+.start-btn, .next-btn, .restart-btn {
+    display: block;
+    width: 100%;
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 25px;
+    color: white;
+    font-weight: bold;
+    background: linear-gradient(120deg, #7655ff, #3fbcff);
+    font-size: 16px;
+}
+
+button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+/* GAME */
+
+.game-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+}
+
+.info-box {
+    background: var(--panel);
+    padding: 12px 17px;
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.info-box strong {
+    color: white;
+    display: block;
+    font-size: 19px;
+    margin-top: 4px;
+}
+
+.progress-bg {
+    background: #ffffff15;
+    height: 8px;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 25px;
+}
+
+.progress {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), var(--cyan));
+    width: 0%;
+    transition: .3s;
+}
+
+.quiz-card {
+    background: var(--panel);
+    border: 1px solid #ffffff18;
+    padding: 30px;
+    border-radius: 18px;
+}
+
+.question-meta {
+    color: var(--cyan);
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.question {
+    font-size: clamp(20px, 4vw, 27px);
+    line-height: 1.5;
+    margin-bottom: 25px;
+}
+
+.answers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 13px;
+}
+
+.answer {
+    text-align: left;
+    background: var(--panel2);
+    border: 2px solid transparent;
+    color: white;
+    padding: 17px;
+    border-radius: 11px;
+    min-height: 60px;
+    transition: .2s;
+}
+
+.answer:hover:not(:disabled) {
+    border-color: var(--purple);
+}
+
+.answer.correct {
+    border-color: var(--green);
+    background: #143e37;
+}
+
+.answer.wrong {
+    border-color: var(--red);
+    background: #452333;
+}
+
+.answer.hidden-option {
+    visibility: hidden;
+}
+
+.answer .letter {
+    color: var(--cyan);
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.explanation {
+    display: none;
+    background: #242d48;
+    border-left: 4px solid var(--cyan);
+    padding: 16px;
+    border-radius: 8px;
+    margin-top: 20px;
+    line-height: 1.6;
+}
+
+.explanation.show {
+    display: block;
+}
+
+.lifelines {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.life-btn {
+    background: #28264d;
+    border: 1px solid #ffffff20;
+    color: white;
+    padding: 10px 14px;
+    border-radius: 9px;
+}
+
+.life-btn:disabled {
+    opacity: .35;
+}
+
+.timer-bar {
+    width: 100%;
+    height: 6px;
+    background: #ffffff15;
+    margin-top: 15px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.timer-fill {
+    height: 100%;
+    width: 100%;
+    background: var(--green);
+    transition: width 1s linear;
+}
+
+/* RESULTS */
+
+.result-card {
+    text-align: center;
+    background: var(--panel);
+    border: 1px solid #ffffff18;
+    padding: 35px 20px;
+    border-radius: 18px;
+}
+
+.result-icon {
+    font-size: 70px;
+}
+
+.score-big {
+    font-size: 55px;
+    font-weight: bold;
+    color: var(--cyan);
+    margin: 15px 0;
+}
+
+.result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.result-stats div {
+    background: var(--panel2);
+    padding: 18px 8px;
+    border-radius: 10px;
+}
+
+.result-stats strong {
+    display: block;
+    font-size: 24px;
+}
+
+.result-stats small {
+    color: var(--muted);
+}
+
+.leaderboard {
+    margin-top: 30px;
+    background: var(--panel);
+    padding: 25px;
+    border-radius: 15px;
+}
+
+.leaderboard h2 {
+    margin-bottom: 15px;
+}
+
+.leader-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 13px 5px;
+    border-bottom: 1px solid #ffffff15;
+    color: var(--muted);
+}
+
+.leader-row strong {
+    color: white;
+}
+
+.leader-row.you {
+    color: var(--cyan);
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: var(--muted);
+    border-top: 1px solid #ffffff15;
+    font-size: 13px;
+}
+
+@media(max-width:650px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .answers {
+        grid-template-columns: 1fr;
+    }
+
+    .quiz-card {
+        padding: 20px 15px;
+    }
+
+    .game-top {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .result-stats {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="container nav">
+        <div class="logo">🧠 Brain<span>Challenge</span></div>
+        <button class="sound-btn" id="soundToggle">🔊 Sound ON</button>
+    </div>
+</header>
+
+<main class="container">
+
+<!-- HOME SCREEN -->
+<section class="screen active" id="home">
+
+    <div class="hero">
+        <div class="hero-icon">🧠</div>
+        <h1>Test Your <span>Brain Power!</span></h1>
+        <p>Challenge yourself. Learn something new.<br>
+        Beat your high score and become a quiz champion.</p>
+    </div>
+
+    <h2 class="section-title">Choose Your Category</h2>
+
+    <div class="grid" id="categories">
+        <button class="category selected" data-category="General Knowledge">
+            <span class="emoji">🌍</span>General Knowledge
+            <small>World facts</small>
+        </button>
+        <button class="category" data-category="Science">
+            <span class="emoji">🔬</span>Science
+            <small>Discover science</small>
+        </button>
+        <button class="category" data-category="Technology">
+            <span class="emoji">💻</span>Technology
+            <small>Digital world</small>
+        </button>
+        <button class="category" data-category="History">
+            <span class="emoji">🏛️</span>History
+            <small>Past events</small>
+        </button>
+        <button class="category" data-category="Geography">
+            <span class="emoji">🗺️</span>Geography
+            <small>Explore Earth</small>
+        </button>
+        <button class="category" data-category="Mathematics">
+            <span class="emoji">➗</span>Mathematics
+            <small>Numbers & logic</small>
+        </button>
+    </div>
+
+    <h2 class="section-title">Select Difficulty</h2>
+
+    <div class="grid">
+        <button class="difficulty selected" data-level="Easy">
+            🟢 Easy
+            <small>20 seconds / question</small>
+        </button>
+        <button class="difficulty" data-level="Medium">
+            🟡 Medium
+            <small>15 seconds / question</small>
+        </button>
+        <button class="difficulty" data-level="Hard">
+            🔴 Hard
+            <small>10 seconds / question</small>
+        </button>
+    </div>
+
+    <button class="start-btn" id="startBtn">START CHALLENGE →</button>
+</section>
+
+<!-- GAME SCREEN -->
+<section class="screen" id="game">
+
+    <div class="game-top">
+        <div class="info-box">QUESTION<strong id="questionNumber">1/5</strong></div>
+        <div class="info-box">SCORE<strong id="score">0</strong></div>
+        <div class="info-box">TIME LEFT<strong id="timer">20s</strong></div>
+    </div>
+
+    <div class="timer-bar">
+        <div class="timer-fill" id="timerFill"></div>
+    </div>
+
+    <div class="progress-bg" style="margin-top:25px">
+        <div class="progress" id="progress"></div>
+    </div>
+
+    <div class="quiz-card">
+
+        <div class="question-meta" id="questionMeta">
+            GENERAL KNOWLEDGE • EASY
+        </div>
+
+        <h2 class="question" id="question">
+            Loading question...
+        </h2>
+
+        <div class="answers" id="answers"></div>
+
+        <div class="explanation" id="explanation"></div>
+
+        <div class="lifelines">
+            <button class="life-btn" id="fiftyBtn">✂️ 50:50</button>
+            <button class="life-btn" id="skipBtn">⏭ Skip</button>
+            <button class="life-btn" id="hintBtn">💡 Hint</button>
+        </div>
+
+        <button class="next-btn" id="nextBtn" disabled>
+            NEXT QUESTION →
+        </button>
+
+    </div>
+</section>
+
+<!-- RESULT SCREEN -->
+<section class="screen" id="result">
+
+    <div class="result-card">
+        <div class="result-icon" id="resultIcon">🏆</div>
+        <h1 id="resultTitle">Challenge Completed!</h1>
+        <p style="color:var(--muted);margin-top:10px">
+            Here is your performance summary.
+        </p>
+
+        <div class="score-big" id="finalScore">0</div>
+        <p>Points Earned</p>
+
+        <div class="result-stats">
+            <div>
+                <strong id="correctCount">0</strong>
+                <small>Correct</small>
+            </div>
+            <div>
+                <strong id="wrongCount">0</strong>
+                <small>Wrong</small>
+            </div>
+            <div>
+                <strong id="accuracy">0%</strong>
+                <small>Accuracy</small>
+            </div>
+        </div>
+
+        <button class="restart-btn" id="restartBtn">
+            🔄 PLAY AGAIN
+        </button>
+    </div>
+
+    <div class="leaderboard">
+        <h2>🏆 Leaderboard</h2>
+        <div id="leaderboardList"></div>
+    </div>
+
+</section>
+
+</main>
+
+<footer>
+    © <span id="year"></span> Brain Challenge. Keep Learning. Keep Growing.
+</footer>
+
+<script>
+
+// ================= QUESTIONS DATABASE =================
+
+const database = {
+
+"General Knowledge": {
+Easy: [
+["What is the capital of France?",["Berlin","Paris","Rome","Madrid"],1,"Paris is the capital and largest city of France.","France is a European country."],
+["How many days are in a leap year?",["364","365","366","367"],2,"A leap year contains 366 days.","February has 29 days in a leap year."],
+["Which is the largest ocean?",["Atlantic","Indian","Arctic","Pacific"],3,"The Pacific Ocean is the largest ocean on Earth.","Think about the ocean between Asia and America."],
+["Which planet is called the Red Planet?",["Venus","Mars","Jupiter","Saturn"],1,"Mars appears reddish because of iron oxide on its surface.","It is the fourth planet from the Sun."],
+["How many colors are traditionally in a rainbow?",["Five","Six","Seven","Eight"],2,"A traditional rainbow is described as having seven colors.","Think of the familiar VIBGYOR sequence."]
+],
+Medium: [
+["Which country has the largest population?",["India","Canada","Australia","Japan"],0,"India is the world's most populous country.","Consider recent global population rankings."],
+["Who wrote Hamlet?",["Charles Dickens","William Shakespeare","Jane Austen","Mark Twain"],1,"William Shakespeare wrote the tragedy Hamlet.","He was an English playwright."],
+["What is the currency of Japan?",["Yuan","Won","Yen","Ringgit"],2,"Japan uses the Japanese yen.","It is represented by the symbol ¥."],
+["Which is the smallest continent by land area?",["Europe","Antarctica","Australia","South America"],2,"Australia is the smallest continent by land area.","It is also a country and a continent."],
+["Where is the headquarters of the United Nations?",["London","Paris","New York","Geneva"],2,"The UN headquarters is in New York City.","It is located in the United States."]
+],
+Hard: [
+["Which treaty formally ended World War I with Germany?",["Treaty of Paris","Treaty of Versailles","Treaty of Rome","Treaty of Vienna"],1,"The Treaty of Versailles was signed in 1919.","It was signed after the 1918 armistice."],
+["Which civilization built Machu Picchu?",["Maya","Aztec","Inca","Olmec"],2,"Machu Picchu was built by the Inca civilization.","It is located in modern-day Peru."],
+["Which is the world's deepest lake?",["Lake Victoria","Lake Superior","Lake Baikal","Caspian Sea"],2,"Lake Baikal in Russia is the deepest lake.","It is located in Siberia."],
+["Which city hosted the first modern Olympic Games?",["Paris","Athens","London","Rome"],1,"Athens hosted the first modern Olympics in 1896.","The games revived an ancient Greek tradition."],
+["Which language has the most native speakers?",["English","Spanish","Mandarin Chinese","Hindi"],2,"Mandarin Chinese has the largest number of native speakers.","Consider the population of China."]
+]
+},
+
+"Science": {
+Easy: [
+["Which gas do plants absorb?",["Oxygen","Nitrogen","Carbon dioxide","Hydrogen"],2,"Plants absorb carbon dioxide during photosynthesis.","Plants use sunlight to make food."],
+["What is H2O commonly called?",["Salt","Water","Oxygen","Hydrogen"],1,"H2O is the chemical formula for water.","It consists of hydrogen and oxygen."],
+["Which organ pumps blood?",["Lungs","Brain","Heart","Liver"],2,"The heart pumps blood throughout the body.","It is part of the circulatory system."],
+["What force pulls objects toward Earth?",["Magnetism","Gravity","Friction","Electricity"],1,"Gravity attracts objects toward one another.","It keeps us on the ground."],
+["Which star is closest to Earth?",["Sirius","Polaris","The Sun","Vega"],2,"The Sun is the closest star to Earth.","It is at the center of our solar system."]
+],
+Medium: [
+["What is the chemical symbol for gold?",["Ag","Au","Fe","Go"],1,"Au is the chemical symbol for gold.","Its name comes from the Latin word aurum."],
+["Which part of a cell contains most genetic material?",["Ribosome","Nucleus","Cell wall","Cytoplasm"],1,"The nucleus contains most of a eukaryotic cell's DNA.","It acts as the cell's control center."],
+["What is the approximate speed of light in vacuum?",["300 km/s","30,000 km/s","300,000 km/s","3 million km/s"],2,"Light travels at approximately 300,000 km per second in vacuum.","It is one of the fundamental constants of physics."],
+["Which vitamin can the body produce using sunlight?",["Vitamin A","Vitamin C","Vitamin D","Vitamin B12"],2,"Sunlight helps the skin produce vitamin D.","It helps maintain healthy bones."],
+["What is the hardest natural substance?",["Iron","Diamond","Quartz","Granite"],1,"Diamond is the hardest naturally occurring mineral on the Mohs scale.","It is a form of carbon."]
+],
+Hard: [
+["What is Avogadro's constant approximately?",["6.022 × 10²³","3.14 × 10⁸","9.81 × 10²","1.602 × 10⁻¹⁹"],0,"Avogadro's constant is approximately 6.022 × 10²³ per mole.","It connects particle counts with amount of substance."],
+["Which particle has a negative electric charge?",["Proton","Neutron","Electron","Photon"],2,"An electron carries a negative elementary charge.","It is found outside the atomic nucleus."],
+["What is the SI unit of electric resistance?",["Volt","Watt","Ohm","Ampere"],2,"The SI unit of electrical resistance is the ohm.","Its symbol is Ω."],
+["Which organelle is the main site of aerobic respiration?",["Chloroplast","Mitochondrion","Ribosome","Golgi body"],1,"Mitochondria are the main site of aerobic respiration in eukaryotic cells.","They are often called the cell's powerhouses."],
+["What is the pH of pure water at 25°C?",["5","6","7","8"],2,"Pure water has a pH of 7 at 25°C.","This is neutral on the standard pH scale."]
+]
+},
+
+"Technology": {
+Easy: [
+["What does CPU stand for?",["Central Processing Unit","Computer Personal Unit","Central Program Utility","Control Processing User"],0,"CPU stands for Central Processing Unit.","It processes computer instructions."],
+["Which company created Windows?",["Apple","Google","Microsoft","IBM"],2,"Microsoft developed the Windows operating system.","It was founded by Bill Gates and Paul Allen."],
+["What does WWW stand for?",["World Wide Web","World Web Window","Wide World Website","Web World Work"],0,"WWW stands for World Wide Web.","It refers to the system of interlinked web pages."],
+["Which device is used to type?",["Monitor","Keyboard","Speaker","Printer"],1,"A keyboard is an input device used for typing.","It contains letters, numbers and symbols."],
+["Which of these is a web browser?",["Excel","Chrome","Photoshop","PowerPoint"],1,"Google Chrome is a web browser.","It is used to access websites."]
+],
+Medium: [
+["What does HTML stand for?",["HyperText Markup Language","HighText Machine Language","Hyper Transfer Main Link","Home Tool Markup Language"],0,"HTML stands for HyperText Markup Language.","It structures web pages."],
+["Which company developed Android?",["Microsoft","Google","Apple","Intel"],1,"Google leads the development of Android.","It is a mobile operating system."],
+["What does RAM stand for?",["Read Access Memory","Random Access Memory","Run Application Module","Rapid Action Machine"],1,"RAM stands for Random Access Memory.","It temporarily stores active data."],
+["Which language is commonly used for web styling?",["Python","CSS","SQL","C++"],1,"CSS is used to style web pages.","It controls colors, spacing and layouts."],
+["What does URL stand for?",["Universal Resource Link","Uniform Resource Locator","United Reference Location","Universal Routing Language"],1,"URL stands for Uniform Resource Locator.","It identifies the address of an online resource."]
+],
+Hard: [
+["Which protocol secures web communication?",["FTP","HTTP","HTTPS","SMTP"],2,"HTTPS uses encryption, typically through TLS, to protect web communication.","The extra S indicates secure."],
+["What is the binary representation of decimal 10?",["1000","1010","1100","1110"],1,"Decimal 10 is binary 1010.","Binary uses powers of two."],
+["Which data structure follows FIFO?",["Stack","Queue","Tree","Graph"],1,"A queue follows First In, First Out.","The first item added is the first removed."],
+["What does API stand for?",["Application Programming Interface","Advanced Program Internet","Applied Processing Input","Application Protocol Integration"],0,"API means Application Programming Interface.","It allows software systems to communicate."],
+["Which database language is used for queries?",["HTML","SQL","CSS","XML"],1,"SQL is used to manage and query relational databases.","It stands for Structured Query Language."]
+]
+},
+
+"History": {
+Easy: [
+["Who was the first President of the United States?",["Abraham Lincoln","George Washington","John Adams","Thomas Jefferson"],1,"George Washington was the first US president.","He served from 1789 to 1797."],
+["In which year did India become independent?",["1945","1947","1950","1952"],1,"India became independent on 15 August 1947.","The date is celebrated every year."],
+["Which ancient civilization built the pyramids at Giza?",["Romans","Greeks","Ancient Egyptians","Persians"],2,"The ancient Egyptians built the pyramids at Giza.","They are located near Cairo."],
+["Who was known as the Iron Man of India?",["Jawaharlal Nehru","Sardar Vallabhbhai Patel","Subhas Chandra Bose","Bhagat Singh"],1,"Sardar Vallabhbhai Patel is known as the Iron Man of India.","He played a major role in national integration."],
+["Which ship sank in 1912?",["Lusitania","Titanic","Britannic","Mayflower"],1,"The RMS Titanic sank in April 1912.","It struck an iceberg in the North Atlantic."]
+],
+Medium: [
+["Who was the first Mughal emperor in India?",["Akbar","Babur","Humayun","Shah Jahan"],1,"Babur founded the Mughal Empire in India.","He won the First Battle of Panipat in 1526."],
+["The French Revolution began in which year?",["1776","1789","1815","1848"],1,"The French Revolution began in 1789.","It transformed French political society."],
+["Who discovered the sea route to India via the Cape of Good Hope?",["Christopher Columbus","Vasco da Gama","Ferdinand Magellan","James Cook"],1,"Vasco da Gama reached India by sea in 1498.","He arrived at Calicut."]
+],
+Medium: [
+["Who was the first Mughal emperor in India?",["Akbar","Babur","Humayun","Shah Jahan"],1,"Babur founded the Mughal Empire in India.","He won the First Battle of Panipat in 1526."],
+["The French Revolution began in which year?",["1776","1789","1815","1848"],1,"The French Revolution began in 1789.","It transformed French political society."],
+["Who discovered the sea route to India via the Cape of Good Hope?",["Christopher Columbus","Vasco da Gama","Ferdinand Magellan","James Cook"],1,"Vasco da Gama reached India by sea in 1498.","He arrived at Calicut."],
+["Who was the first woman Prime Minister of India?",["Sarojini Naidu","Indira Gandhi","Pratibha Patil","Vijaya Lakshmi Pandit"],1,"Indira Gandhi became India's first woman prime minister in 1966.","She was the daughter of Jawaharlal Nehru."],
+["In which year did World War II end?",["1943","1944","1945","1946"],2,"World War II ended in 1945.","Germany surrendered in May and Japan in September."]
+],
+Hard: [
+["Who was the last ruler of the Maurya Empire?",["Ashoka","Bindusara","Brihadratha","Chandragupta"],2,"Brihadratha was the last Mauryan ruler.","He was overthrown by Pushyamitra Shunga."],
+["Which treaty ended the Thirty Years' War?",["Treaty of Utrecht","Peace of Westphalia","Treaty of Paris","Treaty of Tordesillas"],1,"The Peace of Westphalia in 1648 ended the Thirty Years' War.","It reshaped European political relations."],
+["Who led the Haitian Revolution?",["Toussaint Louverture","Simón Bolívar","José de San Martín","Francisco Pizarro"],0,"Toussaint Louverture was a central leader of the Haitian Revolution.","He was a former enslaved person and military leader."],
+["The Magna Carta was signed in which year?",["1066","1215","1492","1648"],1,"King John agreed to the Magna Carta in 1215.","It limited some royal powers."],
+["Which empire was ruled by Suleiman the Magnificent?",["Roman","Ottoman","Persian","Mongol"],1,"Suleiman the Magnificent ruled the Ottoman Empire.","He reigned during the 16th century."]
+]
+},
+
+"Geography": {
+Easy: [
+["Which is the largest continent?",["Africa","Europe","Asia","Australia"],2,"Asia is the largest continent by area.","It includes countries such as China and India."],
+["Which country is shaped like a boot?",["Spain","Italy","Greece","Portugal"],1,"Italy is often described as boot-shaped.","It extends into the Mediterranean Sea."],
+["What is the capital of India?",["Mumbai","New Delhi","Kolkata","Chennai"],1,"New Delhi is the capital of India.","It is located within the National Capital Territory of Delhi."],
+["Which desert is the largest hot desert?",["Gobi","Sahara","Kalahari","Arabian"],1,"The Sahara is the world's largest hot desert.","It is in North Africa."],
+["Which river flows through Egypt?",["Amazon","Nile","Danube","Yangtze"],1,"The Nile flows through Egypt.","It has historically supported agriculture there."]
+],
+Medium: [
+["Which country has the most natural lakes?",["Russia","Canada","Brazil","China"],1,"Canada has the greatest number of natural lakes.","It contains millions of lakes."],
+["Mount Kilimanjaro is in which country?",["Kenya","Tanzania","Uganda","Ethiopia"],1,"Mount Kilimanjaro is in Tanzania.","It is Africa's highest mountain."],
+["Which strait separates Europe and Africa at their narrowest point?",["Bering","Gibraltar","Malacca","Hormuz"],1,"The Strait of Gibraltar separates Spain and Morocco.","It connects the Atlantic Ocean and Mediterranean Sea."],
+["Which is the longest mountain range on land?",["Himalayas","Andes","Rockies","Alps"],1,"The Andes are the longest continental mountain range.","They extend along western South America."],
+["Which country has the city of Istanbul?",["Greece","Turkey","Bulgaria","Romania"],1,"Istanbul is a major city in Turkey.","It spans Europe and Asia."]
+],
+Hard: [
+["Which is the deepest ocean trench?",["Java Trench","Tonga Trench","Mariana Trench","Puerto Rico Trench"],2,"The Mariana Trench contains the deepest known ocean point.","It is in the western Pacific."],
+["Which river crosses the equator twice?",["Amazon","Congo","Nile","Mississippi"],1,"The Congo River crosses the equator twice.","It flows through Central Africa."],
+["Which country is completely surrounded by South Africa?",["Lesotho","Eswatini","Botswana","Namibia"],0,"Lesotho is an enclave entirely surrounded by South Africa.","It is a mountainous country."],
+["Which lake is shared by Peru and Bolivia?",["Lake Victoria","Lake Baikal","Lake Titicaca","Lake Chad"],2,"Lake Titicaca lies on the border of Peru and Bolivia.","It is a major high-altitude lake."],
+["What is the capital of Mongolia?",["Astana","Ulaanbaatar","Tashkent","Bishkek"],1,"Ulaanbaatar is the capital of Mongolia.","It is also the country's largest city."]
+]
+},
+
+"Mathematics": {
+Easy: [
+["What is 12 × 8?",["86","96","108","88"],1,"12 multiplied by 8 equals 96.","Think of 10 × 8 plus 2 × 8."],
+["What is the square root of 144?",["10","11","12","14"],2,"12 × 12 equals 144.","A square root reverses squaring."],
+["What is 25% of 200?",["25","40","50","75"],2,"25% of 200 is 50.","One quarter of 200 gives the answer."],
+["How many sides does a hexagon have?",["Five","Six","Seven","Eight"],1,"A hexagon has six sides.","The prefix hexa means six."],
+["What is 15 + 27?",["40","41","42","43"],2,"15 plus 27 equals 42.","Add tens and units separately."]
+],
+Medium: [
+["What is 15% of 300?",["35","40","45","50"],2,"15% of 300 equals 45.","10% is 30 and 5% is 15."],
+["Solve: 7² + 4²",["49","56","65","81"],2,"49 plus 16 equals 65.","Square each number before adding."],
+["What is the value of π rounded to two decimal places?",["3.12","3.14","3.16","3.18"],1,"Pi rounded to two decimal places is 3.14.","It is the ratio of circumference to diameter."],
+["A triangle has angles 60° and 70°. What is the third angle?",["40°","50°","60°","70°"],1,"The angles of a triangle sum to 180°, so the third is 50°.","Subtract the known angles from 180°."],
+["What is 3/4 expressed as a percentage?",["25%","50%","75%","80%"],2,"Three quarters equals 75%.","Multiply the fraction by 100."]
+],
+Hard: [
+["Solve: 2x + 5 = 17",["4","5","6","7"],2,"2x = 12, so x = 6.","Subtract 5 from both sides first."],
+["What is the derivative of x²?",["x","2x","x³","2"],1,"The derivative of x squared is 2x.","Apply the power rule."],
+["What is the probability of rolling a 6 on a fair six-sided die?",["1/2","1/3","1/6","1/12"],2,"There is one favorable outcome among six equally likely outcomes.","All six faces have equal probability."],
+["What is 2⁵ × 2³?",["2⁸","2¹⁵","2²","2⁶"],0,"When multiplying powers with the same base, add exponents: 5 + 3 = 8.","Use the laws of exponents."],
+["What is the sum of the first 10 positive integers?",["45","50","55","60"],2,"The sum from 1 to 10 is 55.","Pair the first and last numbers."]
+]
+}
+
+};
+
+// ================= GAME STATE =================
+
+let category = "General Knowledge";
+let level = "Easy";
+let questions = [];
+let index = 0;
+let score = 0;
+let correct = 0;
+let wrong = 0;
+let timeLeft = 20;
+let maxTime = 20;
+let timerInterval = null;
+let answered = false;
+let soundOn = true;
+let usedLifelines = { fifty:false, skip:false, hint:false };
+let leaderboard = [];
+
+const $ = id => document.getElementById(id);
+
+function showScreen(name) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    $(name).classList.add("active");
+}
+
+function sound(type) {
+    if (!soundOn) return;
+
+    try {
+        const audio = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audio.createOscillator();
+        const gain = audio.createGain();
+
+        oscillator.connect(gain);
+        gain.connect(audio.destination);
+
+        const tones = {
+            correct: [660, 880],
+            wrong: [220, 160],
+            click: [450, 550],
+            finish: [523, 659, 784]
+        };
+
+        const frequencies = tones[type] || tones.click;
+
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequencies[0];
+        gain.gain.setValueAtTime(.08, audio.currentTime);
+        gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .3);
+
+        oscillator.start();
+        oscillator.stop(audio.currentTime + .3);
+    } catch(e) {}
+}
+
+$("soundToggle").onclick = () => {
+    soundOn = !soundOn;
+    $("soundToggle").textContent = soundOn ? "🔊 Sound ON" : "🔇 Sound OFF";
+};
+
+document.querySelectorAll(".category").forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll(".category").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        category = btn.dataset.category;
+        sound("click");
+    };
+});
+
+document.querySelectorAll(".difficulty").forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll(".difficulty").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        level = btn.dataset.level;
+        sound("click");
+    };
+});
+
+function shuffle(array) {
+    return [...array].sort(() => Math.random() - .5);
+}
+
+function startGame() {
+    clearInterval(timerInterval);
+
+    questions = shuffle(database[category][level]);
+    index = 0;
+    score = 0;
+    correct = 0;
+    wrong = 0;
+
+    usedLifelines = { fifty:false, skip:false, hint:false };
+
+    maxTime = level === "Easy" ? 20 : level === "Medium" ? 15 : 10;
+
+    $("fiftyBtn").disabled = false;
+    $("skipBtn").disabled = false;
+    $("hintBtn").disabled = false;
+
+    showScreen("game");
+    loadQuestion();
+}
+
+function loadQuestion() {
+    clearInterval(timerInterval);
+
+    if(index >= questions.length) {
+        finishGame();
+        return;
+    }
+
+    answered = false;
+
+    const q = questions[index];
+
+    $("questionNumber").textContent = `${index+1}/${questions.length}`;
+    $("score").textContent = score;
+    $("questionMeta").textContent = `${category.toUpperCase()} • ${level.toUpperCase()}`;
+    $("question").textContent = q[0];
+
+    $("progress").style.width = (index / questions.length * 100) + "%";
+
+    $("explanation").classList.remove("show");
+    $("explanation").textContent = "";
+
+    $("nextBtn").disabled = true;
+    $("nextBtn").textContent = index === questions.length-1 ? "SEE RESULTS →" : "NEXT QUESTION →";
+
+    const answers = $("answers");
+    answers.innerHTML = "";
+
+    q[1].forEach((answer, i) => {
+        const btn = document.createElement("button");
+        btn.className = "answer";
+        btn.innerHTML = `<span class="letter">${String.fromCharCode(65+i)}.</span> `;
+        btn.appendChild(document.createTextNode(answer));
+        btn.onclick = () => selectAnswer(i);
+        answers.appendChild(btn);
+    });
+
+    timeLeft = maxTime;
+    updateTimerDisplay();
+timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+
+        if(timeLeft <= 0) {
+            clearInterval(timerInterval);
+            if(!answered) {
+                answered = true;
+                wrong++;
+                revealAnswer(-1);
+                showExplanation("⏰ Time is up! " + q[3]);
+                $("nextBtn").disabled = false;
+            }
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    $("timer").textContent = timeLeft + "s";
+    $("timerFill").style.width = (timeLeft / maxTime * 100) + "%";
+    $("timerFill").style.background = timeLeft <= 5 ? "var(--red)" : "var(--green)";
+}
+
+function selectAnswer(choice) {
+    if(answered) return;
+
+    answered = true;
+    clearInterval(timerInterval);
+
+    const q = questions[index];
+    const isCorrect = choice === q[2];
+
+    if(isCorrect) {
+        correct++;
+        score += 100 + timeLeft * 5;
+        sound("correct");
+        showExplanation("✅ Correct! " + q[3]);
+    } else {
+        wrong++;
+        sound("wrong");
+        showExplanation("❌ Not quite. " + q[3]);
+    }
+
+    revealAnswer(choice);
+    $("score").textContent = score;
+    $("nextBtn").disabled = false;
+}
+
+function revealAnswer(selected) {
+    const q = questions[index];
+    const buttons = $("answers").querySelectorAll(".answer");
+
+    buttons.forEach((btn, i) => {
+        btn.disabled = true;
+
+        if(i === q[2]) btn.classList.add("correct");
+        else if(i === selected) btn.classList.add("wrong");
+    });
+}
+
+function showExplanation(message) {
+    $("explanation").textContent = message;
+    $("explanation").classList.add("show");
+}
+
+$("nextBtn").onclick = () => {
+    if(!answered) return;
+    sound("click");
+    index++;
+    loadQuestion();
+};
+
+// 50:50 lifeline
+$("fiftyBtn").onclick = () => {
+    if(usedLifelines.fifty || answered) return;
+
+    usedLifelines.fifty = true;
+    $("fiftyBtn").disabled = true;
+
+    const q = questions[index];
+    const buttons = [...$("answers").querySelectorAll(".answer")];
+
+    let incorrect = buttons
+        .map((btn,i) => i)
+        .filter(i => i !== q[2]);
+
+    shuffle(incorrect).slice(0,2).forEach(i => {
+        buttons[i].classList.add("hidden-option");
+        buttons[i].disabled = true;
+    });
+
+    sound("click");
+};
+
+// Skip question
+$("skipBtn").onclick = () => {
+    if(usedLifelines.skip || answered) return;
+
+    usedLifelines.skip = true;
+    $("skipBtn").disabled = true;
+
+    clearInterval(timerInterval);
+    answered = true;
+    showExplanation("⏭ Question skipped. No points awarded.");
+    $("nextBtn").disabled = false;
+    sound("click");
+};
+
+// Hint lifeline
+$("hintBtn").onclick = () => {
+    if(usedLifelines.hint || answered) return;
+
+    usedLifelines.hint = true;
+    $("hintBtn").disabled = true;
+
+    showExplanation("💡 Hint: " + questions[index][4]);
+    sound("click");
+};
+
+// Results
+function finishGame() {
+    clearInterval(timerInterval);
+
+    const total = questions.length;
+    const accuracy = Math.round((correct / total) * 100);
+
+    $("finalScore").textContent = score;
+    $("correctCount").textContent = correct;
+    $("wrongCount").textContent = wrong;
+    $("accuracy").textContent = accuracy + "%";
+
+    $("resultIcon").textContent =
+        accuracy >= 80 ? "🏆" : accuracy >= 50 ? "🥈" : "💪";
+
+    $("resultTitle").textContent =
+        accuracy >= 80 ? "Excellent Performance!" :
+        accuracy >= 50 ? "Great Effort!" : "Keep Practicing!";
+sound("finish");
+
+    saveLeaderboard(score, accuracy);
+    renderLeaderboard();
+
+    showScreen("result");
+}
+
+function saveLeaderboard(finalScore, accuracy) {
+    const entry = {
+        score: finalScore,
+        accuracy,
+        category,
+        level,
+        date: new Date().toLocaleDateString()
+    };
+
+    leaderboard.push(entry);
+    leaderboard.sort((a,b) => b.score - a.score);
+    leaderboard = leaderboard.slice(0,10);
+
+    try {
+        localStorage.setItem("brainChallengeLeaderboard", JSON.stringify(leaderboard));
+    } catch(e) {}
+}
+
+function renderLeaderboard() {
+    try {
+        const saved = JSON.parse(localStorage.getItem("brainChallengeLeaderboard") || "[]");
+        leaderboard = Array.isArray(saved) ? saved : [];
+    } catch(e) {
+        leaderboard = [];
+    }
+
+    const list = $("leaderboardList");
+    list.innerHTML = "";
+
+    if(!leaderboard.length) {
+        list.textContent = "No scores yet. Play a game!";
+        return;
+    }
+
+    leaderboard.forEach((entry,i) => {
+        const row = document.createElement("div");
+        row.className = "leader-row";
+        const rank = document.createElement("span");
+        const details = document.createElement("strong");
+
+        rank.textContent = `${i+1}. ${entry.category} (${entry.level})`;
+        details.textContent = entry.score + " pts";
+
+        row.append(rank, details);
+        list.appendChild(row);
+    });
+}
+
+$("restartBtn").onclick = () => {
+    sound("click");
+    showScreen("home");
+};
+
+$("startBtn").onclick = () => {
+    sound("click");
+    startGame();
+};
+
+$("year").textContent = new Date().getFullYear();
+
+</script>
+</body>
+</html>
